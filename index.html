@@ -133,6 +133,34 @@
             padding-bottom: 8px;
         }
         
+        /* Fullscreen styles */
+        .video-container:fullscreen {
+            background: black;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .video-container:fullscreen .video-wrapper {
+            width: 100%;
+            height: 100%;
+            padding-top: 0;
+            max-width: 100%;
+            max-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .video-container:fullscreen #videoPlayer {
+            position: relative;
+            object-fit: contain;
+            max-width: 100%;
+            max-height: 100vh;
+        }
+        
         /* Mobile optimization */
         @media (max-width: 768px) {
             .video-wrapper {
@@ -163,6 +191,15 @@
             
             .time-display {
                 font-size: 0.8rem;
+            }
+            
+            /* Better mobile controls spacing */
+            .custom-controls {
+                padding: 0 8px 8px;
+            }
+            
+            .time-row {
+                margin-bottom: 4px;
             }
         }
         
@@ -217,6 +254,26 @@
         .hidden {
             display: none;
         }
+        
+        /* New time display layout */
+        .time-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 0 8px;
+            margin-bottom: 6px;
+        }
+        
+        .current-time, .duration {
+            font-size: 0.8rem;
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .progress-container {
+            width: 100%;
+            padding: 0 8px;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -259,10 +316,19 @@
                     </div>
 
                     <div class="custom-controls absolute bottom-0 left-0 right-0 z-20 text-white bg-gradient-to-t from-black/80 to-transparent">
-                        <div class="px-3 pt-3 pb-1">
+                        <!-- Time display above progress bar -->
+                        <div class="time-row">
+                            <span id="currentTime" class="current-time">00:00:00</span>
+                            <span id="duration" class="duration">00:00:00</span>
+                        </div>
+                        
+                        <!-- Progress bar -->
+                        <div class="progress-container">
                             <input type="range" id="progressBar" min="0" max="100" value="0" class="w-full">
                         </div>
-                        <div class="flex items-center justify-between controls-row px-3 pb-2">
+                        
+                        <!-- Controls row -->
+                        <div class="flex items-center justify-between controls-row px-3 pb-2 mt-2">
                             <div class="flex items-center gap-2 md:gap-3">
                                 <button id="playPauseBtn" class="control-button">
                                     <i id="playPauseIcon" class="fas fa-play"></i>
@@ -273,7 +339,6 @@
                                     </button>
                                     <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1" class="w-12 md:w-16">
                                 </div>
-                                <div id="timeDisplay" class="time-display text-xs md:text-sm font-mono ml-1">00:00:00 / 00:00:00</div>
                             </div>
                             <div class="flex items-center gap-2 md:gap-3">
                                 <button id="speedBtn" class="control-button text-xs font-medium">
@@ -325,7 +390,8 @@
         const volumeBtn = document.getElementById('volumeBtn');
         const volumeIcon = document.getElementById('volumeIcon');
         const volumeSlider = document.getElementById('volumeSlider');
-        const timeDisplay = document.getElementById('timeDisplay');
+        const currentTimeEl = document.getElementById('currentTime');
+        const durationEl = document.getElementById('duration');
         const progressBar = document.getElementById('progressBar');
         const fullscreenBtn = document.getElementById('fullscreenBtn');
         const speedBtn = document.getElementById('speedBtn');
@@ -339,6 +405,7 @@
         let isSeeking = false;
         let isFullscreen = false;
         let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        let lastTap = 0;
         
         // Aspect ratio options
         const aspectRatios = [
@@ -383,7 +450,10 @@
         const showControls = () => {
             videoContainer.classList.remove('controls-hidden');
             clearTimeout(controlsTimeout);
-            controlsTimeout = setTimeout(hideControls, 3000);
+            
+            // Set different timeout for mobile vs desktop
+            const timeoutDuration = isMobile ? 3000 : 2500;
+            controlsTimeout = setTimeout(hideControls, timeoutDuration);
         };
 
         // Update play/pause icons
@@ -443,7 +513,8 @@
         });
         
         videoPlayer.addEventListener('loadedmetadata', () => {
-            timeDisplay.textContent = `${formatTime(0)} / ${formatTime(videoPlayer.duration)}`;
+            currentTimeEl.textContent = formatTime(0);
+            durationEl.textContent = formatTime(videoPlayer.duration);
             
             // Auto-set aspect ratio based on video dimensions for original option
             const videoRatio = videoPlayer.videoWidth / videoPlayer.videoHeight;
@@ -458,7 +529,8 @@
                 const progressPercent = (videoPlayer.currentTime / videoPlayer.duration) * 100;
                 progressBar.value = progressPercent;
             }
-            timeDisplay.textContent = `${formatTime(videoPlayer.currentTime)} / ${formatTime(videoPlayer.duration)}`;
+            currentTimeEl.textContent = formatTime(videoPlayer.currentTime);
+            durationEl.textContent = formatTime(videoPlayer.duration);
         });
         
         videoPlayer.addEventListener('volumechange', () => {
@@ -492,6 +564,14 @@
             touchStartY = e.touches[0].clientY;
             touchStartTime = Date.now();
             seekAmount = 0;
+            
+            // Double tap to play/pause
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTap;
+            if (tapLength < 300 && tapLength > 0) {
+                togglePlay();
+            }
+            lastTap = currentTime;
             
             // Prevent default to avoid scrolling when interacting with video
             if (e.target === videoPlayer || e.target === progressBar) {
@@ -547,6 +627,7 @@
             isSeeking = true;
             const seekTime = (e.target.value / 100) * videoPlayer.duration;
             videoPlayer.currentTime = seekTime;
+            currentTimeEl.textContent = formatTime(seekTime);
         });
         
         progressBar.addEventListener('change', () => {
@@ -651,20 +732,37 @@
         // Handle fullscreen change events
         document.addEventListener('fullscreenchange', () => {
             isFullscreen = !!document.fullscreenElement;
+            if (isFullscreen) {
+                // Adjust for fullscreen
+                document.body.style.overflow = 'hidden';
+            } else {
+                // Reset when exiting fullscreen
+                document.body.style.overflow = 'auto';
+            }
         });
         
         document.addEventListener('webkitfullscreenchange', () => {
             isFullscreen = !!document.webkitFullscreenElement;
+            if (isFullscreen) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = 'auto';
+            }
         });
         
         document.addEventListener('msfullscreenchange', () => {
             isFullscreen = !!document.msFullscreenElement;
+            if (isFullscreen) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = 'auto';
+            }
         });
 
         // Auto-hide controls on mobile after delay
         if (isMobile) {
             // Longer timeout on mobile
-            controlsTimeout = setTimeout(hideControls, 4000);
+            controlsTimeout = setTimeout(hideControls, 3000);
         }
     });
     </script>
