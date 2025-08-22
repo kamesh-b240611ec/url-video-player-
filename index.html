@@ -7,76 +7,36 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .video-wrapper {
-            aspect-ratio: 16/9;
-        }
-        #videoPlayer {
-            object-fit: contain; /* Default fit mode */
-        }
-        /* Custom styles for sliders */
-        input[type="range"] {
-            -webkit-appearance: none;
-            appearance: none;
-            background: transparent;
-            cursor: pointer;
-        }
-        input[type="range"]::-webkit-slider-runnable-track {
-            background: #4a5568;
-            height: 0.3rem;
-            border-radius: 0.25rem;
-        }
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            margin-top: -5px; /* Center thumb */
-            background-color: #fff;
-            height: 0.8rem;
-            width: 0.8rem;
-            border-radius: 50%;
-            box-shadow: 0 0 4px rgba(0,0,0,0.5);
-        }
-        /* Controls visibility */
-        .controls-hidden .custom-controls,
-        .controls-hidden .center-controls {
-            opacity: 0;
-            pointer-events: none;
-        }
-        /* General transition styles */
-        .custom-controls, .center-controls, #settingsMenu {
-            transition: opacity 0.3s ease-in-out;
-        }
-        /* Progress bar hover effect */
-        #progressBarContainer:hover #progress {
-            box-shadow: 0 0 5px rgba(99, 102, 241, 0.8);
-        }
+        .video-wrapper { aspect-ratio: 16/9; }
+        #videoPlayer { object-fit: contain; }
+        input[type="range"] { -webkit-appearance: none; appearance: none; background: transparent; cursor: pointer; }
+        input[type="range"]::-webkit-slider-runnable-track { background: #4a5568; height: 0.3rem; border-radius: 0.25rem; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; margin-top: -5px; background-color: #fff; height: 0.8rem; width: 0.8rem; border-radius: 50%; box-shadow: 0 0 4px rgba(0,0,0,0.5); }
+        .controls-hidden .custom-controls, .controls-hidden .center-controls { opacity: 0; pointer-events: none; }
+        .custom-controls, .center-controls, #audioTrackMenu { transition: opacity 0.3s ease-in-out; }
+        .tooltip { position: relative; display: inline-block; }
+        .tooltip .tooltip-text { visibility: hidden; width: 220px; background-color: #1f2937; color: #fff; text-align: center; border-radius: 6px; padding: 5px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -110px; opacity: 0; transition: opacity 0.3s; }
+        .tooltip:hover .tooltip-text { visibility: visible; opacity: 1; }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-200 font-sans flex items-center justify-center min-h-screen">
     <div class="container mx-auto px-4 py-8 max-w-5xl w-full">
         <header class="text-center mb-8">
-            <h1 class="text-4xl md:text-5xl font-bold text-indigo-400 mb-3">URL Video Player - Milestone 2</h1>
-            <p class="text-lg text-gray-400">Play videos from any URL with audio track and fit options</p>
+            <h1 class="text-4xl md:text-5xl font-bold text-indigo-400 mb-3">URL Video Player - Milestone 4</h1>
+            <p class="text-lg text-gray-400">Featuring Compatibility Mode to fix playback issues</p>
         </header>
 
         <div class="bg-black rounded-xl shadow-2xl shadow-indigo-900/20 overflow-hidden">
             <div id="videoContainer" class="video-wrapper relative flex items-center justify-center overflow-hidden">
-                <video id="videoPlayer" class="w-full h-full"></video>
-                
+                <video id="videoPlayer" class="w-full h-full" crossorigin="anonymous"></video>
                 <div id="videoPlaceholder" class="absolute inset-0 flex items-center justify-center bg-black text-white z-20">
-                    <div class="text-center p-6">
-                        <i class="fas fa-film text-5xl text-indigo-400 mb-4"></i>
-                        <h3 class="text-xl font-semibold mb-2">Your Video Player</h3>
-                        <p class="text-gray-400">Paste a video URL below to begin</p>
-                    </div>
+                    <div class="text-center p-6"><i class="fas fa-film text-5xl text-indigo-400 mb-4"></i><h3 class="text-xl font-semibold mb-2">Your Video Player</h3><p class="text-gray-400">Paste a video URL below to begin</p></div>
                 </div>
-
                 <div id="actionIndicator" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/70 text-white text-lg font-bold px-4 py-2 rounded-lg transition-opacity duration-500 opacity-0 z-40 pointer-events-none"></div>
-
                 <div class="center-controls absolute inset-0 z-10 flex justify-center items-center gap-16">
                      <button id="seekBackwardBtn" class="bg-black/40 rounded-full w-16 h-16 flex items-center justify-center text-2xl text-white hover:bg-opacity-60 transition-all duration-200"><i class="fas fa-undo"></i></button>
                      <button id="seekForwardBtn" class="bg-black/40 rounded-full w-16 h-16 flex items-center justify-center text-2xl text-white hover:bg-opacity-60 transition-all duration-200"><i class="fas fa-redo"></i></button>
                 </div>
-
                 <div class="custom-controls absolute bottom-0 left-0 right-0 z-30 text-white bg-gradient-to-t from-black/80 to-transparent">
                     <div class="px-4 pt-2">
                         <div id="progressBarContainer" class="w-full h-5 group flex items-center cursor-pointer">
@@ -97,253 +57,167 @@
                             <div id="timeDisplay" class="text-sm font-mono ml-2">00:00 / 00:00</div>
                         </div>
                         <div class="flex items-center gap-4 relative">
-                            <button id="settingsBtn" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/20"><i class="fas fa-cog text-xl"></i></button>
-                            <button id="fullscreenBtn"><i id="fullscreenIcon" class="fas fa-expand text-xl"></i></button>
-                            
-                            <div id="settingsMenu" class="absolute bottom-full right-0 mb-3 bg-black/80 backdrop-blur-sm rounded-lg p-4 w-60 hidden">
-                                <div class="flex justify-between items-center mb-3">
-                                    <span class="font-semibold text-sm">Speed</span>
-                                    <button id="speedBtn" class="text-sm font-mono w-16 h-7 rounded-md bg-white/10 hover:bg-white/20">1x</button>
-                                </div>
-                                <div class="flex justify-between items-center mb-3">
-                                    <span class="font-semibold text-sm">Video Fit</span>
-                                    <button id="fitBtn" class="text-sm font-semibold w-16 h-7 rounded-md bg-white/10 hover:bg-white/20">Fit</button>
-                                </div>
-                                <div id="audioTracksContainer" class="hidden">
-                                     <span class="font-semibold text-sm mb-2 block">Audio</span>
-                                     <div id="audioTracksList" class="max-h-24 overflow-y-auto"></div>
-                                </div>
+                            <button id="speedBtn" class="font-semibold text-sm w-12 h-8 rounded-md hover:bg-white/20">1x</button>
+                            <button id="fitBtn" class="font-semibold text-sm w-12 h-8 rounded-md hover:bg-white/20">Fit</button>
+                            <div id="audioControl" class="relative hidden">
+                                <button id="audioBtn" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/20"><i class="fas fa-language text-xl"></i></button>
+                                <div id="audioTrackMenu" class="absolute bottom-full right-0 mb-3 bg-black/80 backdrop-blur-sm rounded-lg p-2 w-48 hidden max-h-40 overflow-y-auto"></div>
                             </div>
+                            <button id="fullscreenBtn"><i id="fullscreenIcon" class="fas fa-expand text-xl"></i></button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="p-4 bg-gray-800">
+            <div class="p-4 bg-gray-800 space-y-3">
                 <div class="flex flex-col sm:flex-row gap-2">
                     <input type="text" id="videoUrl" placeholder="Paste video URL here..." class="flex-grow px-4 py-3 border border-gray-600 bg-gray-900 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition text-gray-200">
-                    <button id="playBtn" class="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ring-offset-gray-800 transition-transform hover:scale-105">
-                        <i class="fas fa-play mr-2"></i> Play
-                    </button>
+                    <button id="playBtn" class="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ring-offset-gray-800 transition-transform hover:scale-105"><i class="fas fa-play mr-2"></i> Play</button>
+                </div>
+                <div class="flex items-center gap-2 text-sm">
+                    <input type="checkbox" id="proxyCheckbox" class="h-4 w-4 rounded bg-gray-700 border-gray-500 text-indigo-600 focus:ring-indigo-500">
+                    <label for="proxyCheckbox" class="text-gray-300">Use Compatibility Mode</label>
+                    <div class="tooltip">
+                        <i class="fas fa-info-circle text-gray-400"></i>
+                        <span class="tooltip-text">Fixes playback and audio track errors for some URLs by using a proxy. May be slower.</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-    // Milestone 2: UI Overhaul, Settings Menu, Audio Track Selection, New Fit Modes.
     document.addEventListener('DOMContentLoaded', function() {
-        const videoUrlInput = document.getElementById('videoUrl');
-        const playBtn = document.getElementById('playBtn');
-        const videoContainer = document.getElementById('videoContainer');
-        const videoPlayer = document.getElementById('videoPlayer');
-        const videoPlaceholder = document.getElementById('videoPlaceholder');
-        const actionIndicator = document.getElementById('actionIndicator');
-
-        // Controls
-        const playPauseBtn = document.getElementById('playPauseBtn');
-        const playPauseIcon = document.getElementById('playPauseIcon');
-        const seekBackwardBtn = document.getElementById('seekBackwardBtn');
-        const seekForwardBtn = document.getElementById('seekForwardBtn');
-        const volumeBtn = document.getElementById('volumeBtn');
-        const volumeIcon = document.getElementById('volumeIcon');
-        const volumeSlider = document.getElementById('volumeSlider');
-        const timeDisplay = document.getElementById('timeDisplay');
-        const progressBarContainer = document.getElementById('progressBarContainer');
-        const progress = document.getElementById('progress');
-        const progressThumb = document.getElementById('progressThumb');
-        const seekTooltip = document.getElementById('seekTooltip');
-        const fullscreenBtn = document.getElementById('fullscreenBtn');
-        const fullscreenIcon = document.getElementById('fullscreenIcon');
+        // --- Milestone 4: Compatibility Mode (CORS Proxy) ---
         
-        // Settings Menu
-        const settingsBtn = document.getElementById('settingsBtn');
-        const settingsMenu = document.getElementById('settingsMenu');
-        const speedBtn = document.getElementById('speedBtn');
-        const fitBtn = document.getElementById('fitBtn');
-        const audioTracksContainer = document.getElementById('audioTracksContainer');
-        const audioTracksList = document.getElementById('audioTracksList');
+        const videoUrlInput = document.getElementById('videoUrl'), playBtn = document.getElementById('playBtn');
+        const videoContainer = document.getElementById('videoContainer'), videoPlayer = document.getElementById('videoPlayer'), videoPlaceholder = document.getElementById('videoPlaceholder'), actionIndicator = document.getElementById('actionIndicator');
+        const playPauseBtn = document.getElementById('playPauseBtn'), playPauseIcon = document.getElementById('playPauseIcon'), seekBackwardBtn = document.getElementById('seekBackwardBtn'), seekForwardBtn = document.getElementById('seekForwardBtn');
+        const volumeBtn = document.getElementById('volumeBtn'), volumeIcon = document.getElementById('volumeIcon'), volumeSlider = document.getElementById('volumeSlider'), timeDisplay = document.getElementById('timeDisplay');
+        const progressBarContainer = document.getElementById('progressBarContainer'), progress = document.getElementById('progress'), progressThumb = document.getElementById('progressThumb'), seekTooltip = document.getElementById('seekTooltip');
+        const fullscreenBtn = document.getElementById('fullscreenBtn'), fullscreenIcon = document.getElementById('fullscreenIcon');
+        const speedBtn = document.getElementById('speedBtn'), fitBtn = document.getElementById('fitBtn');
+        const audioControl = document.getElementById('audioControl'), audioBtn = document.getElementById('audioBtn'), audioTrackMenu = document.getElementById('audioTrackMenu');
+        const proxyCheckbox = document.getElementById('proxyCheckbox');
 
-        // State variables
-        let controlsTimeout, indicatorTimeout;
-        let isSeeking = false;
-        
-        const fitModes = [
-            { name: 'Fit', value: 'contain' },
-            { name: 'Fill', value: 'cover' },
-            { name: 'Stretch', value: 'fill' }
-        ];
+        let controlsTimeout, indicatorTimeout, isSeeking = false;
+        const fitModes = [{ name: 'Fit', value: 'contain' }, { name: 'Fill', value: 'cover' }, { name: 'Stretch', value: 'fill' }];
         let currentFitIndex = 0;
-        
-        // --- UTILITY FUNCTIONS ---
+        const CORS_PROXY = "https://proxy.cors.sh/";
+
         const formatTime = (timeInSeconds) => {
             const time = Math.round(timeInSeconds);
-            const hours = Math.floor(time / 3600);
-            const minutes = Math.floor((time % 3600) / 60);
-            const seconds = time % 60;
-            if (videoPlayer.duration >= 3600) {
-                return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-            }
-            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            const hours = Math.floor(time / 3600), minutes = Math.floor((time % 3600) / 60), seconds = time % 60;
+            return videoPlayer.duration >= 3600 ? `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}` : `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         };
-
         const showIndicator = (message) => {
             clearTimeout(indicatorTimeout);
             actionIndicator.textContent = message;
             actionIndicator.classList.remove('opacity-0');
             indicatorTimeout = setTimeout(() => actionIndicator.classList.add('opacity-0'), 1000);
         };
-
-        const hideControls = () => {
-            if (videoPlayer.paused || isSeeking || !settingsMenu.classList.contains('hidden')) return;
-            videoContainer.classList.add('controls-hidden');
-        };
-
+        const hideControls = () => { if (!videoPlayer.paused && !isSeeking && audioTrackMenu.classList.contains('hidden')) videoContainer.classList.add('controls-hidden'); };
         const showControls = () => {
             videoContainer.classList.remove('controls-hidden');
             clearTimeout(controlsTimeout);
             controlsTimeout = setTimeout(hideControls, 3000);
         };
-        
         const togglePlay = () => videoPlayer.paused ? videoPlayer.play() : videoPlayer.pause();
-
-        // --- AUDIO TRACK SETUP ---
+        
         const setupAudioTracks = () => {
-            audioTracksList.innerHTML = '';
+            audioTrackMenu.innerHTML = '';
             const tracks = videoPlayer.audioTracks;
-            
             if (tracks.length <= 1) {
-                audioTracksContainer.classList.add('hidden');
+                audioControl.classList.add('hidden');
                 return;
             }
-            
-            audioTracksContainer.classList.remove('hidden');
-            
+            audioControl.classList.remove('hidden');
             for (let i = 0; i < tracks.length; i++) {
                 const track = tracks[i];
-                const trackButton = document.createElement('button');
-                trackButton.className = 'w-full text-left p-2 text-sm rounded-md hover:bg-white/20';
-                trackButton.textContent = track.label || track.language || `Track ${i + 1}`;
-                if (track.enabled) {
-                    trackButton.classList.add('bg-indigo-500', 'font-bold');
-                }
-                
-                trackButton.addEventListener('click', () => {
-                    for (let j = 0; j < tracks.length; j++) {
-                        tracks[j].enabled = false;
-                    }
+                const button = document.createElement('button');
+                button.className = 'w-full text-left p-2 text-sm rounded-md hover:bg-white/20';
+                button.textContent = track.label || track.language || `Track ${i + 1}`;
+                if (track.enabled) button.classList.add('bg-indigo-500', 'font-bold');
+                button.onclick = (e) => {
+                    e.stopPropagation();
+                    for (let j = 0; j < tracks.length; j++) tracks[j].enabled = false;
                     track.enabled = true;
-                    setupAudioTracks(); // Re-render to update UI
-                });
-                
-                audioTracksList.appendChild(trackButton);
+                    setupAudioTracks();
+                    audioTrackMenu.classList.add('hidden');
+                };
+                audioTrackMenu.appendChild(button);
             }
         };
 
-        // --- PRIMARY EVENT LISTENERS ---
         playBtn.addEventListener('click', () => {
-            const url = videoUrlInput.value.trim();
+            let url = videoUrlInput.value.trim();
             if (url) {
                 videoPlaceholder.style.display = 'none';
+                if (proxyCheckbox.checked) {
+                    url = `${CORS_PROXY}${url}`;
+                }
                 videoPlayer.src = url;
                 videoPlayer.load();
                 videoPlayer.play();
-            } else {
-                alert('Please enter a valid video URL');
-            }
+            } else { alert('Please enter a valid video URL'); }
         });
-        
-        // --- VIDEO PLAYER EVENTS ---
+
         videoPlayer.addEventListener('play', () => playPauseIcon.classList.replace('fa-play', 'fa-pause'));
         videoPlayer.addEventListener('pause', () => playPauseIcon.classList.replace('fa-pause', 'fa-play'));
         videoPlayer.addEventListener('loadedmetadata', () => {
             timeDisplay.textContent = `${formatTime(0)} / ${formatTime(videoPlayer.duration)}`;
             setupAudioTracks();
         });
-        
         videoPlayer.addEventListener('timeupdate', () => {
             if (!isSeeking) {
-                const progressPercent = (videoPlayer.currentTime / videoPlayer.duration) * 100;
-                progress.style.width = `${progressPercent}%`;
-                progressThumb.style.left = `${progressPercent}%`;
+                const percent = (videoPlayer.currentTime / videoPlayer.duration) * 100;
+                progress.style.width = `${percent}%`;
+                progressThumb.style.left = `${percent}%`;
             }
             timeDisplay.textContent = `${formatTime(videoPlayer.currentTime)} / ${formatTime(videoPlayer.duration)}`;
         });
-        
         videoPlayer.addEventListener('volumechange', () => {
             volumeSlider.value = videoPlayer.volume;
-            if (videoPlayer.muted || videoPlayer.volume === 0) {
-                volumeIcon.className = "fas fa-volume-xmark text-xl";
-            } else if (videoPlayer.volume < 0.5) {
-                volumeIcon.className = "fas fa-volume-low text-xl";
-            } else {
-                volumeIcon.className = "fas fa-volume-high text-xl";
-            }
+            if (videoPlayer.muted || videoPlayer.volume === 0) volumeIcon.className = "fas fa-volume-xmark text-xl";
+            else if (videoPlayer.volume < 0.5) volumeIcon.className = "fas fa-volume-low text-xl";
+            else volumeIcon.className = "fas fa-volume-high text-xl";
         });
 
-        // --- CONTROL VISIBILITY & INTERACTION ---
         videoContainer.addEventListener('mousemove', showControls);
         videoContainer.addEventListener('mouseleave', () => { if (!videoPlayer.paused) hideControls(); });
-        
-        videoContainer.addEventListener('click', (e) => {
-            if (e.target.closest('.custom-controls')) return;
-            togglePlay();
-        });
+        videoContainer.addEventListener('click', (e) => { if (!e.target.closest('.custom-controls')) togglePlay(); });
 
-        // --- CUSTOM CONTROLS EVENTS ---
         playPauseBtn.addEventListener('click', (e) => { e.stopPropagation(); togglePlay(); });
         seekBackwardBtn.addEventListener('click', (e) => { e.stopPropagation(); videoPlayer.currentTime -= 10; });
         seekForwardBtn.addEventListener('click', (e) => { e.stopPropagation(); videoPlayer.currentTime += 10; });
         volumeBtn.addEventListener('click', (e) => { e.stopPropagation(); videoPlayer.muted = !videoPlayer.muted; });
         volumeSlider.addEventListener('input', (e) => { e.stopPropagation(); videoPlayer.volume = e.target.value; videoPlayer.muted = false; });
         
-        // --- PROGRESS BAR SEEKING ---
         const handleSeek = (e) => {
-            const rect = progressBarContainer.getBoundingClientRect();
-            const percent = Math.min(Math.max(0, e.clientX - rect.left), rect.width) / rect.width;
+            const rect = progressBarContainer.getBoundingClientRect(), percent = Math.min(Math.max(0, e.clientX - rect.left), rect.width) / rect.width;
             videoPlayer.currentTime = percent * videoPlayer.duration;
             progress.style.width = `${percent * 100}%`;
             progressThumb.style.left = `${percent * 100}%`;
         };
-
         progressBarContainer.addEventListener('mousedown', (e) => { e.stopPropagation(); isSeeking = true; handleSeek(e); });
         document.addEventListener('mouseup', () => isSeeking = false);
-        document.addEventListener('mousemove', (e) => { if (isSeeking) { handleSeek(e); } });
-        
+        document.addEventListener('mousemove', (e) => { if (isSeeking) handleSeek(e); });
         progressBarContainer.addEventListener('mousemove', (e) => {
             if (isSeeking) return;
-            const rect = progressBarContainer.getBoundingClientRect();
-            const percent = Math.min(Math.max(0, e.clientX - rect.left), rect.width) / rect.width;
+            const rect = progressBarContainer.getBoundingClientRect(), percent = Math.min(Math.max(0, e.clientX - rect.left), rect.width) / rect.width;
             seekTooltip.style.left = `${percent * 100}%`;
             seekTooltip.textContent = formatTime(percent * videoPlayer.duration);
         });
         progressBarContainer.addEventListener('mouseenter', () => seekTooltip.classList.remove('hidden'));
         progressBarContainer.addEventListener('mouseleave', () => seekTooltip.classList.add('hidden'));
 
-        // --- SETTINGS MENU ---
-        settingsBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            settingsMenu.classList.toggle('hidden');
-            if (!settingsMenu.classList.contains('hidden')) {
-                clearTimeout(controlsTimeout); // Keep controls visible when menu is open
-            }
-        });
-        document.addEventListener('click', (e) => {
-            if (!settingsBtn.contains(e.target) && !settingsMenu.contains(e.target)) {
-                settingsMenu.classList.add('hidden');
-            }
-        });
-
         speedBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            const rates = [1.0, 1.5, 2.0, 0.5];
-            let currentRate = videoPlayer.playbackRate;
-            let nextIndex = (rates.indexOf(currentRate) + 1) % rates.length;
+            const rates = [1.0, 1.5, 2.0, 0.5], currentRate = videoPlayer.playbackRate, nextIndex = (rates.indexOf(currentRate) + 1) % rates.length;
             videoPlayer.playbackRate = rates[nextIndex];
             speedBtn.textContent = `${videoPlayer.playbackRate}x`;
             showIndicator(`Speed: ${videoPlayer.playbackRate}x`);
         });
-
         fitBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             currentFitIndex = (currentFitIndex + 1) % fitModes.length;
@@ -352,32 +226,24 @@
             fitBtn.textContent = newFit.name;
             showIndicator(`Fit: ${newFit.name}`);
         });
-
-        // --- FULLSCREEN ---
+        audioBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            audioTrackMenu.classList.toggle('hidden');
+            if (!audioTrackMenu.classList.contains('hidden')) clearTimeout(controlsTimeout);
+        });
         fullscreenBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (!document.fullscreenElement) {
-                videoContainer.requestFullscreen();
-            } else {
-                document.exitFullscreen();
-            }
+            if (!document.fullscreenElement) videoContainer.requestFullscreen(); else document.exitFullscreen();
         });
-        document.addEventListener('fullscreenchange', () => {
-            fullscreenIcon.className = document.fullscreenElement ? "fas fa-compress text-xl" : "fas fa-expand text-xl";
-        });
+        document.addEventListener('fullscreenchange', () => fullscreenIcon.className = document.fullscreenElement ? "fas fa-compress text-xl" : "fas fa-expand text-xl");
+        document.addEventListener('click', (e) => { if (!audioBtn.contains(e.target)) audioTrackMenu.classList.add('hidden'); });
 
-        // --- KEYBOARD CONTROLS ---
         document.addEventListener('keydown', (e) => {
             if (videoUrlInput === document.activeElement) return;
-            switch (e.key.toLowerCase()) {
-                case ' ': e.preventDefault(); togglePlay(); break;
-                case 'f': fullscreenBtn.click(); break;
-                case 'm': volumeBtn.click(); break;
-                case 'arrowright': videoPlayer.currentTime += 5; break;
-                case 'arrowleft': videoPlayer.currentTime -= 5; break;
-                case 'arrowup': videoPlayer.volume = Math.min(1, videoPlayer.volume + 0.1); break;
-                case 'arrowdown': videoPlayer.volume = Math.max(0, videoPlayer.volume - 0.1); break;
-            }
+            const key = e.key.toLowerCase();
+            if (key === ' ') e.preventDefault();
+            const actions = { ' ': togglePlay, 'f': () => fullscreenBtn.click(), 'm': () => volumeBtn.click(), 'arrowright': () => videoPlayer.currentTime += 5, 'arrowleft': () => videoPlayer.currentTime -= 5, 'arrowup': () => videoPlayer.volume = Math.min(1, videoPlayer.volume + 0.1), 'arrowdown': () => videoPlayer.volume = Math.max(0, videoPlayer.volume - 0.1) };
+            if (actions[key]) actions[key]();
         });
     });
     </script>
