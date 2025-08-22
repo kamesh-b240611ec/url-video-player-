@@ -23,16 +23,30 @@
         }
         input[type="range"]::-webkit-slider-runnable-track {
             background: #4a5568;
-            height: 0.25rem;
+            height: 0.4rem;
             border-radius: 0.25rem;
         }
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
             background-color: #fff;
-            height: 1rem;
-            width: 1rem;
+            height: 1.2rem;
+            width: 1.2rem;
             border-radius: 50%;
+            margin-top: -0.4rem; /* This centers the thumb on the track */
+        }
+        input[type="range"]::-moz-range-thumb {
+            background-color: #fff;
+            height: 1.2rem;
+            width: 1.2rem;
+            border-radius: 50%;
+            border: none;
+        }
+        input[type="range"]::-moz-range-track {
+            background: #4a5568;
+            height: 0.4rem;
+            border-radius: 0.25rem;
+            border: none;
         }
         .controls-hidden .custom-controls {
             opacity: 0;
@@ -48,6 +62,17 @@
             transform: scale(1.1);
             background-color: rgba(255, 255, 255, 0.2) !important;
         }
+        .center-controls {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        .video-container:hover .center-controls,
+        .video-container:active .center-controls,
+        .video-container.paused .center-controls {
+            opacity: 1;
+            pointer-events: auto;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans">
@@ -58,7 +83,7 @@
         </header>
 
         <div class="bg-white rounded-lg shadow-md overflow-hidden">
-            <div id="videoContainer" class="video-wrapper bg-black relative flex items-center justify-center">
+            <div id="videoContainer" class="video-wrapper bg-black relative flex items-center justify-center video-container">
                 <video id="videoPlayer">
                     Your browser does not support the video tag.
                 </video>
@@ -71,13 +96,16 @@
                     </div>
                 </div>
 
-                <!-- 10-second seek buttons -->
-                <div class="absolute inset-0 flex justify-between items-center px-4 z-10 pointer-events-none">
-                    <button id="seekBack10s" class="seek-btn pointer-events-auto bg-black bg-opacity-40 rounded-full w-12 h-12 flex items-center justify-center text-white">
-                        <i class="fas fa-undo"></i>
+                <!-- Center controls with pause button and seek buttons -->
+                <div class="center-controls absolute inset-0 flex justify-center items-center gap-8 z-10">
+                    <button id="seekBack10s" class="seek-btn bg-black bg-opacity-40 rounded-full w-14 h-14 flex items-center justify-center text-white text-xl">
+                        <i class="fas fa-backward"></i>
                     </button>
-                    <button id="seekForward10s" class="seek-btn pointer-events-auto bg-black bg-opacity-40 rounded-full w-12 h-12 flex items-center justify-center text-white">
-                        <i class="fas fa-redo"></i>
+                    <button id="centerPlayPause" class="seek-btn bg-black bg-opacity-60 rounded-full w-16 h-16 flex items-center justify-center text-white text-2xl">
+                        <i class="fas fa-pause"></i>
+                    </button>
+                    <button id="seekForward10s" class="seek-btn bg-black bg-opacity-40 rounded-full w-14 h-14 flex items-center justify-center text-white text-xl">
+                        <i class="fas fa-forward"></i>
                     </button>
                 </div>
 
@@ -127,6 +155,7 @@
         
         <div class="mt-6 text-center text-gray-500 text-sm">
             <p>Use spacebar to play/pause, arrow keys to seek and adjust volume</p>
+            <p class="mt-1">Touch the video to show controls</p>
         </div>
     </div>
 
@@ -142,6 +171,8 @@
         // Control elements
         const playPauseBtn = document.getElementById('playPauseBtn');
         const playPauseIcon = document.getElementById('playPauseIcon');
+        const centerPlayPause = document.getElementById('centerPlayPause');
+        const centerPlayPauseIcon = centerPlayPause.querySelector('i');
         const volumeBtn = document.getElementById('volumeBtn');
         const volumeIcon = document.getElementById('volumeIcon');
         const volumeSlider = document.getElementById('volumeSlider');
@@ -155,8 +186,7 @@
 
         // State variables
         let controlsTimeout;
-        let playbackRates = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
-        let currentPlaybackRateIndex = 2; // Start at 1.0
+        let isSpeed2x = false;
         let aspectRatios = ['contain', 'cover', 'fill'];
         let currentAspectRatioIndex = 0;
         
@@ -171,7 +201,15 @@
         };
 
         // Toggle play/pause
-        const togglePlay = () => videoPlayer.paused ? videoPlayer.play() : videoPlayer.pause();
+        const togglePlay = () => {
+            if (videoPlayer.paused) {
+                videoPlayer.play();
+                videoContainer.classList.remove('paused');
+            } else {
+                videoPlayer.pause();
+                videoContainer.classList.add('paused');
+            }
+        };
 
         // Hide controls after delay
         const hideControls = () => {
@@ -184,6 +222,19 @@
             videoContainer.classList.remove('controls-hidden');
             clearTimeout(controlsTimeout);
             controlsTimeout = setTimeout(hideControls, 2000);
+        };
+
+        // Update play/pause icons
+        const updatePlayPauseIcons = (isPlaying) => {
+            if (isPlaying) {
+                playPauseIcon.className = "fas fa-pause";
+                centerPlayPauseIcon.className = "fas fa-pause";
+                videoContainer.classList.remove('paused');
+            } else {
+                playPauseIcon.className = "fas fa-play";
+                centerPlayPauseIcon.className = "fas fa-play";
+                videoContainer.classList.add('paused');
+            }
         };
 
         // Load video from URL
@@ -203,12 +254,12 @@
         
         // Video player events
         videoPlayer.addEventListener('play', () => {
-            playPauseIcon.classList.replace('fa-play', 'fa-pause');
+            updatePlayPauseIcons(true);
             showControls();
         });
         
         videoPlayer.addEventListener('pause', () => {
-            playPauseIcon.classList.replace('fa-pause', 'fa-play');
+            updatePlayPauseIcons(false);
             videoContainer.classList.remove('controls-hidden');
         });
         
@@ -237,8 +288,16 @@
         videoContainer.addEventListener('mousemove', showControls);
         videoContainer.addEventListener('mouseleave', () => { if (!videoPlayer.paused) hideControls(); });
         
+        // Touch controls
+        videoContainer.addEventListener('touchstart', () => {
+            showControls();
+            // Prevent default to avoid scrolling on touch devices
+            event.preventDefault();
+        }, { passive: false });
+        
         // Control buttons
         playPauseBtn.addEventListener('click', togglePlay);
+        centerPlayPause.addEventListener('click', togglePlay);
         
         volumeBtn.addEventListener('click', () => {
             videoPlayer.muted = !videoPlayer.muted;
@@ -273,11 +332,11 @@
             showControls();
         });
 
-        // Speed control
+        // Speed control (only 1x and 2x)
         speedBtn.addEventListener('click', () => {
-            currentPlaybackRateIndex = (currentPlaybackRateIndex + 1) % playbackRates.length;
-            videoPlayer.playbackRate = playbackRates[currentPlaybackRateIndex];
-            speedBtn.textContent = playbackRates[currentPlaybackRateIndex] + 'x';
+            isSpeed2x = !isSpeed2x;
+            videoPlayer.playbackRate = isSpeed2x ? 2.0 : 1.0;
+            speedBtn.textContent = videoPlayer.playbackRate + 'x';
             showControls();
         });
 
@@ -314,6 +373,16 @@
                     break;
                 case "arrowdown":
                     videoPlayer.volume = Math.max(0, videoPlayer.volume - 0.1);
+                    break;
+                case "1":
+                    videoPlayer.playbackRate = 1.0;
+                    isSpeed2x = false;
+                    speedBtn.textContent = '1x';
+                    break;
+                case "2":
+                    videoPlayer.playbackRate = 2.0;
+                    isSpeed2x = true;
+                    speedBtn.textContent = '2x';
                     break;
             }
         });
