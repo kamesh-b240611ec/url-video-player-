@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Video Player</title>
+    <title>URL Video Player</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -41,12 +41,19 @@
         .play-btn:hover { transform: scale(1.05); }
         .fade-in { animation: fadeIn 0.5s ease-in; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .seek-btn {
+            transition: all 0.2s ease;
+        }
+        .seek-btn:hover {
+            transform: scale(1.1);
+            background-color: rgba(255, 255, 255, 0.2) !important;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans">
     <div class="container mx-auto px-4 py-8 max-w-4xl">
         <header class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-blue-600 mb-2">Simple Video Player</h1>
+            <h1 class="text-3xl font-bold text-blue-600 mb-2">URL Video Player</h1>
             <p class="text-gray-600">Play videos directly from any URL</p>
         </header>
 
@@ -64,6 +71,16 @@
                     </div>
                 </div>
 
+                <!-- 10-second seek buttons -->
+                <div class="absolute inset-0 flex justify-between items-center px-4 z-10 pointer-events-none">
+                    <button id="seekBack10s" class="seek-btn pointer-events-auto bg-black bg-opacity-40 rounded-full w-12 h-12 flex items-center justify-center text-white">
+                        <i class="fas fa-undo"></i>
+                    </button>
+                    <button id="seekForward10s" class="seek-btn pointer-events-auto bg-black bg-opacity-40 rounded-full w-12 h-12 flex items-center justify-center text-white">
+                        <i class="fas fa-redo"></i>
+                    </button>
+                </div>
+
                 <div class="custom-controls absolute bottom-0 left-0 right-0 z-20 text-white bg-gradient-to-t from-black/70 to-transparent transition-all duration-300 p-3">
                     <div class="mb-2">
                         <input type="range" id="progressBar" min="0" max="100" value="0" class="w-full h-1.5 rounded-full appearance-none cursor-pointer">
@@ -79,9 +96,17 @@
                                 </button>
                                 <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1" class="w-16">
                             </div>
-                            <div id="timeDisplay" class="text-sm font-mono">00:00 / 00:00</div>
+                            <div id="timeDisplay" class="text-sm font-mono">00:00:00 / 00:00:00</div>
                         </div>
                         <div class="flex items-center gap-3">
+                            <!-- Speed control button -->
+                            <button id="speedBtn" class="w-12 h-8 flex items-center justify-center bg-white bg-opacity-20 rounded-md text-xs font-medium hover:bg-opacity-30">
+                                1x
+                            </button>
+                            <!-- Aspect ratio button -->
+                            <button id="aspectRatioBtn" class="w-8 h-8 flex items-center justify-center">
+                                <i class="fas fa-expand-arrows-alt"></i>
+                            </button>
                             <button id="fullscreenBtn" class="w-8 h-8 flex items-center justify-center">
                                 <i class="fas fa-expand"></i>
                             </button>
@@ -123,22 +148,26 @@
         const timeDisplay = document.getElementById('timeDisplay');
         const progressBar = document.getElementById('progressBar');
         const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const speedBtn = document.getElementById('speedBtn');
+        const aspectRatioBtn = document.getElementById('aspectRatioBtn');
+        const seekBack10s = document.getElementById('seekBack10s');
+        const seekForward10s = document.getElementById('seekForward10s');
 
         // State variables
         let controlsTimeout;
+        let playbackRates = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
+        let currentPlaybackRateIndex = 2; // Start at 1.0
+        let aspectRatios = ['contain', 'cover', 'fill'];
+        let currentAspectRatioIndex = 0;
         
-        // Format time function
+        // Format time function (supports hours)
         const formatTime = (timeInSeconds) => {
             const time = Math.round(timeInSeconds);
             const hours = Math.floor(time / 3600);
             const minutes = Math.floor((time % 3600) / 60);
             const seconds = Math.floor(time % 60);
-
-            if (videoPlayer.duration >= 3600) {
-                return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-            } else {
-                return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-            }
+            
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         };
 
         // Toggle play/pause
@@ -233,6 +262,32 @@
             }
         });
 
+        // 10-second seek buttons
+        seekBack10s.addEventListener('click', () => {
+            videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - 10);
+            showControls();
+        });
+        
+        seekForward10s.addEventListener('click', () => {
+            videoPlayer.currentTime = Math.min(videoPlayer.duration, videoPlayer.currentTime + 10);
+            showControls();
+        });
+
+        // Speed control
+        speedBtn.addEventListener('click', () => {
+            currentPlaybackRateIndex = (currentPlaybackRateIndex + 1) % playbackRates.length;
+            videoPlayer.playbackRate = playbackRates[currentPlaybackRateIndex];
+            speedBtn.textContent = playbackRates[currentPlaybackRateIndex] + 'x';
+            showControls();
+        });
+
+        // Aspect ratio control
+        aspectRatioBtn.addEventListener('click', () => {
+            currentAspectRatioIndex = (currentAspectRatioIndex + 1) % aspectRatios.length;
+            videoPlayer.style.objectFit = aspectRatios[currentAspectRatioIndex];
+            showControls();
+        });
+
         // Keyboard controls
         document.addEventListener('keydown', (e) => {
             if (document.activeElement === videoUrlInput) return;
@@ -249,10 +304,10 @@
                     videoPlayer.muted = !videoPlayer.muted;
                     break;
                 case "arrowright":
-                    videoPlayer.currentTime += 5;
+                    videoPlayer.currentTime += 10;
                     break;
                 case "arrowleft":
-                    videoPlayer.currentTime -= 5;
+                    videoPlayer.currentTime -= 10;
                     break;
                 case "arrowup":
                     videoPlayer.volume = Math.min(1, videoPlayer.volume + 0.1);
