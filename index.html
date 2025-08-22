@@ -3,159 +3,306 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>URL Video Player</title>
+    <title>Universal Video Player</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .video-wrapper {
-            aspect-ratio: 16/9;
+        * {
+            box-sizing: border-box;
+            touch-action: manipulation;
         }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            overscroll-behavior: none;
+        }
+        
+        .video-container {
+            position: relative;
+            width: 100%;
+            background: black;
+            overflow: hidden;
+        }
+        
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* Default 16:9 aspect ratio */
+        }
+        
         #videoPlayer {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             object-fit: contain;
         }
+        
         input[type="range"] {
             -webkit-appearance: none;
             appearance: none;
             background: transparent;
             cursor: pointer;
+            height: 16px;
         }
+        
         input[type="range"]::-webkit-slider-runnable-track {
-            background: #4a5568;
-            height: 0.4rem;
-            border-radius: 0.25rem;
+            background: rgba(255, 255, 255, 0.3);
+            height: 4px;
+            border-radius: 2px;
         }
+        
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
             background-color: #fff;
-            height: 1.2rem;
-            width: 1.2rem;
+            height: 16px;
+            width: 16px;
             border-radius: 50%;
-            margin-top: -0.4rem; /* This centers the thumb on the track */
+            margin-top: -6px;
         }
+        
+        input[type="range"]::-moz-range-track {
+            background: rgba(255, 255, 255, 0.3);
+            height: 4px;
+            border-radius: 2px;
+            border: none;
+        }
+        
         input[type="range"]::-moz-range-thumb {
             background-color: #fff;
-            height: 1.2rem;
-            width: 1.2rem;
+            height: 16px;
+            width: 16px;
             border-radius: 50%;
             border: none;
         }
-        input[type="range"]::-moz-range-track {
-            background: #4a5568;
-            height: 0.4rem;
-            border-radius: 0.25rem;
-            border: none;
-        }
+        
         .controls-hidden .custom-controls {
             opacity: 0;
+            transform: translateY(100%);
             pointer-events: none;
         }
-        .play-btn:hover { transform: scale(1.05); }
-        .fade-in { animation: fadeIn 0.5s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .seek-btn {
-            transition: all 0.2s ease;
-        }
-        .seek-btn:hover {
-            transform: scale(1.1);
-            background-color: rgba(255, 255, 255, 0.2) !important;
-        }
+        
         .center-controls {
             opacity: 0;
             transition: opacity 0.3s ease;
             pointer-events: none;
         }
+        
         .video-container:hover .center-controls,
-        .video-container:active .center-controls,
+        .video-container.touch-active .center-controls,
         .video-container.paused .center-controls {
             opacity: 1;
             pointer-events: auto;
         }
+        
+        .control-button {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            font-size: 1.2rem;
+            transition: all 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .control-button:active {
+            transform: scale(0.95);
+            background: rgba(0, 0, 0, 0.7);
+        }
+        
+        .seek-button {
+            width: 50px;
+            height: 50px;
+            font-size: 1.4rem;
+        }
+        
+        .play-button {
+            width: 60px;
+            height: 60px;
+            font-size: 1.8rem;
+        }
+        
+        .custom-controls {
+            transition: all 0.3s ease;
+            padding-bottom: 8px;
+        }
+        
+        /* Mobile optimization */
+        @media (max-width: 768px) {
+            .video-wrapper {
+                padding-top: 56.25%; /* Maintain 16:9 on mobile by default */
+            }
+            
+            .control-button {
+                width: 40px;
+                height: 40px;
+                font-size: 1.1rem;
+            }
+            
+            .seek-button {
+                width: 44px;
+                height: 44px;
+                font-size: 1.2rem;
+            }
+            
+            .play-button {
+                width: 54px;
+                height: 54px;
+                font-size: 1.6rem;
+            }
+            
+            .controls-row {
+                padding: 0 8px;
+            }
+            
+            .time-display {
+                font-size: 0.8rem;
+            }
+        }
+        
+        /* Prevent zoom on input focus on mobile */
+        @media screen and (max-width: 768px) {
+            input[type="text"] {
+                font-size: 16px;
+            }
+        }
+        
+        /* Aspect ratio classes */
+        .ratio-16-9 {
+            padding-top: 56.25%;
+        }
+        
+        .ratio-4-3 {
+            padding-top: 75%;
+        }
+        
+        .ratio-1-1 {
+            padding-top: 100%;
+        }
+        
+        .ratio-21-9 {
+            padding-top: 42.85%;
+        }
+        
+        .ratio-original {
+            padding-top: 0;
+            height: auto;
+        }
+        
+        .ratio-fit {
+            padding-top: 0;
+            height: 70vh;
+        }
+        
+        /* Loading spinner */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans">
-    <div class="container mx-auto px-4 py-8 max-w-4xl">
-        <header class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-blue-600 mb-2">URL Video Player</h1>
-            <p class="text-gray-600">Play videos directly from any URL</p>
+<body class="bg-gray-100 text-gray-800">
+    <div class="container mx-auto px-2 py-4 max-w-4xl">
+        <header class="text-center mb-4">
+            <h1 class="text-2xl md:text-3xl font-bold text-blue-600 mb-1">Universal Video Player</h1>
+            <p class="text-sm md:text-base text-gray-600">Play videos from any URL on any device</p>
         </header>
 
         <div class="bg-white rounded-lg shadow-md overflow-hidden">
-            <div id="videoContainer" class="video-wrapper bg-black relative flex items-center justify-center video-container">
-                <video id="videoPlayer">
-                    Your browser does not support the video tag.
-                </video>
-                
-                <div id="videoPlaceholder" class="absolute inset-0 flex items-center justify-center bg-gray-900 text-white">
-                    <div class="text-center p-6">
-                        <i class="fas fa-play-circle text-5xl text-blue-400 mb-4"></i>
-                        <h3 class="text-xl font-semibold mb-2">Paste a video URL to play</h3>
-                        <p class="text-gray-300">Supports MP4, WebM, MOV and more</p>
-                    </div>
-                </div>
-
-                <!-- Center controls with pause button and seek buttons -->
-                <div class="center-controls absolute inset-0 flex justify-center items-center gap-8 z-10">
-                    <button id="seekBack10s" class="seek-btn bg-black bg-opacity-40 rounded-full w-14 h-14 flex items-center justify-center text-white text-xl">
-                        <i class="fas fa-backward"></i>
-                    </button>
-                    <button id="centerPlayPause" class="seek-btn bg-black bg-opacity-60 rounded-full w-16 h-16 flex items-center justify-center text-white text-2xl">
-                        <i class="fas fa-pause"></i>
-                    </button>
-                    <button id="seekForward10s" class="seek-btn bg-black bg-opacity-40 rounded-full w-14 h-14 flex items-center justify-center text-white text-xl">
-                        <i class="fas fa-forward"></i>
-                    </button>
-                </div>
-
-                <div class="custom-controls absolute bottom-0 left-0 right-0 z-20 text-white bg-gradient-to-t from-black/70 to-transparent transition-all duration-300 p-3">
-                    <div class="mb-2">
-                        <input type="range" id="progressBar" min="0" max="100" value="0" class="w-full h-1.5 rounded-full appearance-none cursor-pointer">
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <button id="playPauseBtn" class="w-8 h-8 flex items-center justify-center">
-                                <i id="playPauseIcon" class="fas fa-play"></i>
-                            </button>
-                            <div class="flex items-center gap-2">
-                                <button id="volumeBtn" class="w-6 h-6 flex items-center justify-center">
-                                    <i id="volumeIcon" class="fas fa-volume-up"></i>
-                                </button>
-                                <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1" class="w-16">
-                            </div>
-                            <div id="timeDisplay" class="text-sm font-mono">00:00:00 / 00:00:00</div>
+            <div id="videoContainer" class="video-container">
+                <div id="videoWrapper" class="video-wrapper ratio-16-9">
+                    <video id="videoPlayer" preload="metadata" playsinline>
+                        Your browser does not support the video tag.
+                    </video>
+                    
+                    <div id="videoPlaceholder" class="absolute inset-0 flex items-center justify-center bg-gray-900 text-white">
+                        <div class="text-center p-4">
+                            <i class="fas fa-play-circle text-4xl md:text-5xl text-blue-400 mb-2"></i>
+                            <h3 class="text-lg md:text-xl font-semibold mb-1">Paste a video URL to play</h3>
+                            <p class="text-xs md:text-sm text-gray-300">Supports MP4, WebM, MOV and more</p>
                         </div>
-                        <div class="flex items-center gap-3">
-                            <!-- Speed control button -->
-                            <button id="speedBtn" class="w-12 h-8 flex items-center justify-center bg-white bg-opacity-20 rounded-md text-xs font-medium hover:bg-opacity-30">
-                                1x
-                            </button>
-                            <!-- Aspect ratio button -->
-                            <button id="aspectRatioBtn" class="w-8 h-8 flex items-center justify-center">
-                                <i class="fas fa-expand-arrows-alt"></i>
-                            </button>
-                            <button id="fullscreenBtn" class="w-8 h-8 flex items-center justify-center">
-                                <i class="fas fa-expand"></i>
-                            </button>
+                    </div>
+
+                    <div id="loadingSpinner" class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+                        <div class="spinner"></div>
+                    </div>
+
+                    <!-- Center controls with play/pause and seek buttons -->
+                    <div class="center-controls absolute inset-0 flex justify-center items-center gap-4 md:gap-8 z-10">
+                        <button id="seekBack10s" class="control-button seek-button">
+                            <i class="fas fa-backward"></i>
+                        </button>
+                        <button id="centerPlayPause" class="control-button play-button">
+                            <i class="fas fa-play" id="centerPlayIcon"></i>
+                        </button>
+                        <button id="seekForward10s" class="control-button seek-button">
+                            <i class="fas fa-forward"></i>
+                        </button>
+                    </div>
+
+                    <div class="custom-controls absolute bottom-0 left-0 right-0 z-20 text-white bg-gradient-to-t from-black/80 to-transparent">
+                        <div class="px-3 pt-3 pb-1">
+                            <input type="range" id="progressBar" min="0" max="100" value="0" class="w-full">
+                        </div>
+                        <div class="flex items-center justify-between controls-row px-3 pb-2">
+                            <div class="flex items-center gap-2 md:gap-3">
+                                <button id="playPauseBtn" class="control-button">
+                                    <i id="playPauseIcon" class="fas fa-play"></i>
+                                </button>
+                                <div class="flex items-center gap-1 md:gap-2">
+                                    <button id="volumeBtn" class="control-button">
+                                        <i id="volumeIcon" class="fas fa-volume-up"></i>
+                                    </button>
+                                    <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1" class="w-12 md:w-16">
+                                </div>
+                                <div id="timeDisplay" class="time-display text-xs md:text-sm font-mono ml-1">00:00:00 / 00:00:00</div>
+                            </div>
+                            <div class="flex items-center gap-2 md:gap-3">
+                                <button id="speedBtn" class="control-button text-xs font-medium">
+                                    1x
+                                </button>
+                                <button id="aspectRatioBtn" class="control-button">
+                                    <i class="fas fa-expand-arrows-alt"></i>
+                                </button>
+                                <button id="fullscreenBtn" class="control-button">
+                                    <i class="fas fa-expand"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="p-4">
+            <div class="p-3 md:p-4">
                 <div class="flex flex-col sm:flex-row gap-2">
-                    <input type="text" id="videoUrl" placeholder="Paste video URL here..." class="flex-grow px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
-                    <button id="loadBtn" class="play-btn px-5 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700">
-                        <i class="fas fa-play mr-2"></i> Play
+                    <input type="text" id="videoUrl" placeholder="Paste video URL here..." class="flex-grow px-3 py-2 md:px-4 md:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm md:text-base">
+                    <button id="loadBtn" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 text-sm md:text-base">
+                        <i class="fas fa-play mr-1 md:mr-2"></i> Play
                     </button>
                 </div>
             </div>
         </div>
         
-        <div class="mt-6 text-center text-gray-500 text-sm">
-            <p>Use spacebar to play/pause, arrow keys to seek and adjust volume</p>
-            <p class="mt-1">Touch the video to show controls</p>
+        <div class="mt-4 text-center text-gray-500 text-xs md:text-sm">
+            <p>Tap video to show controls. Use arrow keys to seek and adjust volume.</p>
         </div>
     </div>
 
@@ -165,14 +312,16 @@
         const videoUrlInput = document.getElementById('videoUrl');
         const loadBtn = document.getElementById('loadBtn');
         const videoContainer = document.getElementById('videoContainer');
+        const videoWrapper = document.getElementById('videoWrapper');
         const videoPlayer = document.getElementById('videoPlayer');
         const videoPlaceholder = document.getElementById('videoPlaceholder');
+        const loadingSpinner = document.getElementById('loadingSpinner');
         
         // Control elements
         const playPauseBtn = document.getElementById('playPauseBtn');
         const playPauseIcon = document.getElementById('playPauseIcon');
         const centerPlayPause = document.getElementById('centerPlayPause');
-        const centerPlayPauseIcon = centerPlayPause.querySelector('i');
+        const centerPlayIcon = document.getElementById('centerPlayIcon');
         const volumeBtn = document.getElementById('volumeBtn');
         const volumeIcon = document.getElementById('volumeIcon');
         const volumeSlider = document.getElementById('volumeSlider');
@@ -187,7 +336,19 @@
         // State variables
         let controlsTimeout;
         let isSpeed2x = false;
-        let aspectRatios = ['contain', 'cover', 'fill'];
+        let isSeeking = false;
+        let isFullscreen = false;
+        let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        
+        // Aspect ratio options
+        const aspectRatios = [
+            { class: 'ratio-16-9', name: '16:9' },
+            { class: 'ratio-4-3', name: '4:3' },
+            { class: 'ratio-1-1', name: '1:1' },
+            { class: 'ratio-21-9', name: '21:9' },
+            { class: 'ratio-original', name: 'Original' },
+            { class: 'ratio-fit', name: 'Fit to Screen' }
+        ];
         let currentAspectRatioIndex = 0;
         
         // Format time function (supports hours)
@@ -215,24 +376,25 @@
         const hideControls = () => {
             if (videoPlayer.paused) return;
             videoContainer.classList.add('controls-hidden');
+            videoContainer.classList.remove('touch-active');
         };
 
         // Show controls
         const showControls = () => {
             videoContainer.classList.remove('controls-hidden');
             clearTimeout(controlsTimeout);
-            controlsTimeout = setTimeout(hideControls, 2000);
+            controlsTimeout = setTimeout(hideControls, 3000);
         };
 
         // Update play/pause icons
         const updatePlayPauseIcons = (isPlaying) => {
             if (isPlaying) {
                 playPauseIcon.className = "fas fa-pause";
-                centerPlayPauseIcon.className = "fas fa-pause";
+                centerPlayIcon.className = "fas fa-pause";
                 videoContainer.classList.remove('paused');
             } else {
                 playPauseIcon.className = "fas fa-play";
-                centerPlayPauseIcon.className = "fas fa-play";
+                centerPlayIcon.className = "fas fa-play";
                 videoContainer.classList.add('paused');
             }
         };
@@ -242,9 +404,16 @@
             const url = videoUrlInput.value.trim();
             if (url) {
                 videoPlaceholder.classList.add('hidden');
+                loadingSpinner.classList.remove('hidden');
                 videoPlayer.src = url;
                 videoPlayer.load();
+                
+                // Reset aspect ratio to default when loading new video
+                currentAspectRatioIndex = 0;
+                videoWrapper.className = 'video-wrapper ratio-16-9';
+                
                 videoPlayer.play().catch(e => {
+                    loadingSpinner.classList.add('hidden');
                     alert('Error playing video: ' + e.message);
                 });
             } else {
@@ -256,20 +425,39 @@
         videoPlayer.addEventListener('play', () => {
             updatePlayPauseIcons(true);
             showControls();
+            loadingSpinner.classList.add('hidden');
         });
         
         videoPlayer.addEventListener('pause', () => {
             updatePlayPauseIcons(false);
             videoContainer.classList.remove('controls-hidden');
+            loadingSpinner.classList.add('hidden');
+        });
+        
+        videoPlayer.addEventListener('waiting', () => {
+            loadingSpinner.classList.remove('hidden');
+        });
+        
+        videoPlayer.addEventListener('playing', () => {
+            loadingSpinner.classList.add('hidden');
         });
         
         videoPlayer.addEventListener('loadedmetadata', () => {
             timeDisplay.textContent = `${formatTime(0)} / ${formatTime(videoPlayer.duration)}`;
+            
+            // Auto-set aspect ratio based on video dimensions for original option
+            const videoRatio = videoPlayer.videoWidth / videoPlayer.videoHeight;
+            if (videoRatio && isFinite(videoRatio)) {
+                // Update the original ratio class
+                videoWrapper.style.paddingTop = videoRatio > 0 ? `${(1/videoRatio)*100}%` : '56.25%';
+            }
         });
         
         videoPlayer.addEventListener('timeupdate', () => {
-            const progressPercent = (videoPlayer.currentTime / videoPlayer.duration) * 100;
-            progressBar.value = progressPercent;
+            if (!isSeeking) {
+                const progressPercent = (videoPlayer.currentTime / videoPlayer.duration) * 100;
+                progressBar.value = progressPercent;
+            }
             timeDisplay.textContent = `${formatTime(videoPlayer.currentTime)} / ${formatTime(videoPlayer.duration)}`;
         });
         
@@ -286,14 +474,61 @@
 
         // Control visibility
         videoContainer.addEventListener('mousemove', showControls);
-        videoContainer.addEventListener('mouseleave', () => { if (!videoPlayer.paused) hideControls(); });
+        videoContainer.addEventListener('mouseleave', () => { 
+            if (!videoPlayer.paused) hideControls(); 
+        });
         
-        // Touch controls
-        videoContainer.addEventListener('touchstart', () => {
+        // Touch controls for mobile
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchStartTime = 0;
+        let seekAmount = 0;
+        
+        videoContainer.addEventListener('touchstart', (e) => {
+            videoContainer.classList.add('touch-active');
             showControls();
-            // Prevent default to avoid scrolling on touch devices
-            event.preventDefault();
+            
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            touchStartTime = Date.now();
+            seekAmount = 0;
+            
+            // Prevent default to avoid scrolling when interacting with video
+            if (e.target === videoPlayer || e.target === progressBar) {
+                e.preventDefault();
+            }
         }, { passive: false });
+        
+        videoContainer.addEventListener('touchmove', (e) => {
+            if (videoContainer.classList.contains('touch-active')) {
+                // Horizontal swipe for seeking
+                const touchX = e.touches[0].clientX;
+                const deltaX = touchX - touchStartX;
+                
+                // Only consider it a seek gesture if horizontal movement is significant
+                if (Math.abs(deltaX) > 30) {
+                    seekAmount = deltaX / 2; // Adjust sensitivity
+                    e.preventDefault(); // Prevent scrolling when seeking
+                }
+            }
+        }, { passive: false });
+        
+        videoContainer.addEventListener('touchend', (e) => {
+            if (seekAmount !== 0) {
+                videoPlayer.currentTime += seekAmount / 100 * videoPlayer.duration;
+                seekAmount = 0;
+            }
+            
+            // Single tap to toggle controls
+            const touchEndTime = Date.now();
+            if (touchEndTime - touchStartTime < 300) {
+                if (videoContainer.classList.contains('controls-hidden')) {
+                    showControls();
+                } else {
+                    hideControls();
+                }
+            }
+        });
         
         // Control buttons
         playPauseBtn.addEventListener('click', togglePlay);
@@ -309,15 +544,34 @@
         });
         
         progressBar.addEventListener('input', (e) => {
+            isSeeking = true;
             const seekTime = (e.target.value / 100) * videoPlayer.duration;
             videoPlayer.currentTime = seekTime;
         });
         
+        progressBar.addEventListener('change', () => {
+            isSeeking = false;
+        });
+        
         fullscreenBtn.addEventListener('click', () => {
             if (!document.fullscreenElement) {
-                videoContainer.requestFullscreen();
+                if (videoContainer.requestFullscreen) {
+                    videoContainer.requestFullscreen();
+                } else if (videoContainer.webkitRequestFullscreen) {
+                    videoContainer.webkitRequestFullscreen();
+                } else if (videoContainer.msRequestFullscreen) {
+                    videoContainer.msRequestFullscreen();
+                }
+                isFullscreen = true;
             } else {
-                document.exitFullscreen();
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+                isFullscreen = false;
             }
         });
 
@@ -342,8 +596,15 @@
 
         // Aspect ratio control
         aspectRatioBtn.addEventListener('click', () => {
+            // Remove current aspect ratio class
+            videoWrapper.className = 'video-wrapper';
+            
+            // Cycle to next aspect ratio
             currentAspectRatioIndex = (currentAspectRatioIndex + 1) % aspectRatios.length;
-            videoPlayer.style.objectFit = aspectRatios[currentAspectRatioIndex];
+            
+            // Add new aspect ratio class
+            videoWrapper.classList.add(aspectRatios[currentAspectRatioIndex].class);
+            
             showControls();
         });
 
@@ -386,6 +647,25 @@
                     break;
             }
         });
+
+        // Handle fullscreen change events
+        document.addEventListener('fullscreenchange', () => {
+            isFullscreen = !!document.fullscreenElement;
+        });
+        
+        document.addEventListener('webkitfullscreenchange', () => {
+            isFullscreen = !!document.webkitFullscreenElement;
+        });
+        
+        document.addEventListener('msfullscreenchange', () => {
+            isFullscreen = !!document.msFullscreenElement;
+        });
+
+        // Auto-hide controls on mobile after delay
+        if (isMobile) {
+            // Longer timeout on mobile
+            controlsTimeout = setTimeout(hideControls, 4000);
+        }
     });
     </script>
 </body>
